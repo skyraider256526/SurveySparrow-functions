@@ -1,10 +1,8 @@
 const functions = require('firebase-functions');
 
-const { db } = require('./util/admin');
+const { addUrl, getUrls, deleteUrl } = require('./handlers/urls');
 
-const { addUrl } = require('./handlers/urls');
-
-const { signup, login } = require('./handlers/users');
+const { signup, login, getUserDetails } = require('./handlers/users');
 
 const FBAuth = require('./util/fbAuth');
 
@@ -17,28 +15,17 @@ const app = express();
 
 /// URL routes
 app.post('/url', FBAuth, addUrl);
+app.get('/urls', FBAuth, getUrls);
+app.delete('/url/:id', FBAuth, deleteUrl);
 
 /// Users route
 app.post('/signup', signup);
 app.post('/login', login);
+app.get('/user', FBAuth, getUserDetails);
 
 /// ROOT
 app.get('/', (request, response) => {
   response.send('HI');
-});
-
-/// ALL USERS
-app.get('/users', (request, response) => {
-  db.collection('users')
-    .get()
-    .then(data => {
-      let users = [];
-      data.forEach(doc => {
-        users.push(doc.id);
-      });
-      return response.json(users);
-    })
-    .catch(err => console.error(err));
 });
 
 exports.api = functions.https.onRequest(app);

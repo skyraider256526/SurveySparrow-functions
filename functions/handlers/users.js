@@ -89,7 +89,24 @@ exports.login = (request, response) => {
         return response
           .status(403)
           .json({ general: 'Wrong credentials, please try again' });
-      else return response.status(500).json({ error: err.code });
+      else
+        return response.status(500).json({ general: 'Something went wrong' });
     });
 };
 ///! Login
+
+///! Get user detail
+exports.getUserDetails = (request, response) => {
+  let userData = {};
+  console.log(request.user.username);
+  db.doc(`/users/${request.user.username}`)
+    .get()
+    .then(data => {
+      if (data.exists) userData = data.data();
+      return response.json(userData);
+    })
+    .catch(err => {
+      console.error(err);
+      response.status(500).json(err);
+    });
+};

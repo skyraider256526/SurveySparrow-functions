@@ -40,3 +40,42 @@ exports.addUrl = (request, response) => {
 };
 
 ///! ADD URL
+
+///! Get urls
+exports.getUrls = (request, response) => {
+  console.log(request.user.uid);
+  db.collection(`/urls/${request.user.uid}/urls`)
+    .get()
+    .then(doc => {
+      console.log(doc.docs);
+      let urls = [];
+      doc.forEach(doc => {
+        let newUrl = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        urls.push(newUrl);
+      });
+      return response.status(201).json(urls);
+    })
+    .then(err => {
+      console.log(err);
+      return response.status(400).json({ general: 'Something went wrong' });
+    });
+};
+
+///! Remove url
+
+exports.deleteUrl = (request, response) => {
+  console.log(request.params.id);
+  db.doc(`/urls/${request.user.uid}/urls/${request.params.id}`)
+    .delete()
+    .then(data => {
+      console.log(data.writeTime);
+      return response.status(200).json({ general: 'Url deleted' });
+    })
+    .catch(err => {
+      console.log(err);
+      return response.status(400).json({ general: 'Something went wrong' });
+    });
+};
