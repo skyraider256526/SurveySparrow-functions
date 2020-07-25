@@ -88,9 +88,8 @@ exports.login = (request, response) => {
       if (err.code === 'auth/wrong-password')
         return response
           .status(403)
-          .json({ general: 'Wrong credentials, please try again' });
-      else
-        return response.status(500).json({ general: 'Something went wrong' });
+          .json({ password: 'Wrong credentials, please try again' });
+      else return response.status(500).json({ email: 'Email invaild' });
     });
 };
 ///! Login
