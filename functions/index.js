@@ -6,10 +6,14 @@ const { signup, login, getUserDetails } = require('./handlers/users');
 
 const FBAuth = require('./util/fbAuth');
 
+const cors = require('cors');
+
 ///! SERVER
 const express = require('express');
 
 const app = express();
+
+app.use(cors());
 
 /// baseUrl: ***/api
 
