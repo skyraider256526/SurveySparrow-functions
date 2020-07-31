@@ -1,10 +1,12 @@
 const { db } = require('../util/admin');
 ///! ADD URL
 
-const shortUrl = (string, id) => {
+const getShortUrl = (string, id) => {
   let resStr = '',
-    resId = '';
-  const uniqueStr = [...new Set(string)];
+    resId = '',
+    urlRegEx = /^(?:https?|chrome):\/\/(?:w{0,3}\.)?([^\s$.?#]+).[^\s]*$/;
+  const website = string.match(urlRegEx)[1];
+  const uniqueStr = [...new Set(website)];
   const uniqueStrLen = uniqueStr.length;
   const uniqueId = [...new Set(id)];
   const uniqueIdLen = uniqueId.length;
@@ -21,18 +23,18 @@ const shortUrl = (string, id) => {
 };
 
 exports.addUrl = (request, response) => {
+  const originalUrl = request.body.url;
+  let shortUrl = '';
   db.collection(`urls/${request.user.uid}/urls/`)
     .add({
-      originalUrl: request.body.url,
+      originalUrl: originalUrl,
     })
     .then(doc => {
-      doc.set(
-        { shortUrl: shortUrl(request.body.url, doc.id) },
-        { merge: true }
-      );
+      shortUrl = getShortUrl(request.body.url, doc.id);
+      doc.set({ shortUrl: shortUrl }, { merge: true });
+      return response.status(201).json({ originalUrl, shortUrl });
     })
     // .create({ shortUrl: 'testseeee' })
-    .then(() => response.status(201).json({ message: 'Url stored' }))
     .catch(err => {
       console.error(err);
       response.status(500).json(err);
@@ -68,11 +70,19 @@ exports.getUrls = (request, response) => {
 
 exports.deleteUrl = (request, response) => {
   console.log(request.params.id);
-  db.doc(`/urls/${request.user.uid}/urls/${request.params.id}`)
-    .delete()
+  db.collection(`/urls/${request.user.uid}/urls/`)
+    .where('shortUrl', '==', request.params.id)
+    /// this only returns one document
+    .limit(1)
+    .get()
+    .then(docs => {
+      docs.forEach(doc => {
+        // so we can return
+        return doc.ref.delete();
+      });
+    })
     .then(data => {
-      console.log(data.writeTime);
-      return response.status(200).json({ general: 'Url deleted' });
+      return response.status(200).json({ general: `Url deleted on ` });
     })
     .catch(err => {
       console.log(err);
